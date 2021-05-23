@@ -7,96 +7,97 @@ import cpu_simulator as sim # used to simulate hardware
 # Based on PySimpleGUI, which is found on the web here:  https://pysimplegui.readthedocs.io/en/latest/
 # A quick tutorial is here:  https://realpython.com/pysimplegui-python/#installing-pysimplegui
 
-verbose_window_events:bool = True
-verbose_cpu_events:bool = True
+verbose_window_events:bool = True 
 
+# The data model and controller
 theCPU:sim.CPU = sim.CPU()
 theCPU.tick() # Make sure we start at tick 0
 
+# This will be a convenient place to put output
+terminal_ouput:sg.Multiline = sg.Multiline(autoscroll=True,size=(80,10),write_only=True,key="STDOUT")
+
+
+############################## CPU Register ######################################
+
+# Text fields and "set" buttons for the CPU registers
 clockTickDisplay=sg.Text(theCPU.theClock)
-register0_display = sg.In(size=(20,1),key="REG0",enable_events=True) #,default_text=theCPU.register0.toString()
-register1_display = sg.In(size=(20,1),key="REG1",enable_events=True) #,default_text=theCPU.register1.toString()
-register2_display = sg.In(size=(20,1),key="REG2",enable_events=True) #,default_text=theCPU.register2.toString()
-register3_display = sg.In(size=(20,1),key="REG3",enable_events=True) #,default_text=theCPU.register3.toString()
-register4_display = sg.In(size=(20,1),key="REG4",enable_events=True) #,default_text=theCPU.register4.toString()
-register5_display = sg.In(size=(20,1),key="REG5",enable_events=True) #,default_text=theCPU.register5.toString()
-register6_display = sg.In(size=(20,1),key="REG6",enable_events=True) #,default_text=theCPU.register6.toString()
-register7_display = sg.In(size=(20,1),key="REG7",enable_events=True) #,default_text=theCPU.register7.toString()
-register0_ok = sg.Button("Set",key="R0_OK")
-register1_ok = sg.Button("Set",key="R1_OK")
-register2_ok = sg.Button("Set",key="R2_OK")
-register3_ok = sg.Button("Set",key="R3_OK")
-register4_ok = sg.Button("Set",key="R4_OK")
-register5_ok = sg.Button("Set",key="R5_OK")
-register6_ok = sg.Button("Set",key="R6_OK")
-register7_ok = sg.Button("Set",key="R7_OK")
+register0_display = sg.In(size=(20,1),key="REG0",enable_events=True)
+register1_display = sg.In(size=(20,1),key="REG1",enable_events=True)
+register2_display = sg.In(size=(20,1),key="REG2",enable_events=True)
+register3_display = sg.In(size=(20,1),key="REG3",enable_events=True)
+register4_display = sg.In(size=(20,1),key="REG4",enable_events=True)
+register5_display = sg.In(size=(20,1),key="REG5",enable_events=True)
+register6_display = sg.In(size=(20,1),key="REG6",enable_events=True)
+register7_display = sg.In(size=(20,1),key="REG7",enable_events=True)
+setRegister0_Button = sg.Button("Set",key="R0_OK")
+setRegister1_Button = sg.Button("Set",key="R1_OK")
+setRegister2_Button = sg.Button("Set",key="R2_OK")
+setRegister3_Button = sg.Button("Set",key="R3_OK")
+setRegister4_Button = sg.Button("Set",key="R4_OK")
+setRegister5_Button = sg.Button("Set",key="R5_OK")
+setRegister6_Button = sg.Button("Set",key="R6_OK")
+setRegister7_Button = sg.Button("Set",key="R7_OK")
 
-def toggle_reg0_modifier() -> None:
-    toggle_byte_and_button_settable(register0_display,register0_ok,theCPU.register0.toString)
-
-def toggle_reg1_modifier() -> None:
-    toggle_byte_and_button_settable(register1_display,register1_ok,theCPU.register1.toString)
-
-def toggle_reg2_modifier() -> None:
-    toggle_byte_and_button_settable(register2_display,register2_ok,theCPU.register2.toString)
-
-def toggle_reg3_modifier() -> None:
-    toggle_byte_and_button_settable(register3_display,register3_ok,theCPU.register3.toString)
-
-def toggle_reg4_modifier() -> None:
-    toggle_byte_and_button_settable(register4_display,register4_ok,theCPU.register4.toString)
-
-def toggle_reg5_modifier() -> None:
-    toggle_byte_and_button_settable(register5_display,register5_ok,theCPU.register5.toString)
-
-def toggle_reg6_modifier() -> None:
-    toggle_byte_and_button_settable(register6_display,register6_ok,theCPU.register6.toString)
-
-def toggle_reg7_modifier() -> None:
-    toggle_byte_and_button_settable(register7_display,register7_ok,theCPU.register7.toString)
-
+# Functions that set the content of the register fields
 def update_reg0_display() -> None:
     register0_display.update(theCPU.register0.toString())
-    toggle_reg0_modifier()
+    update_register0_appearance()
 
 def update_reg1_display() -> None:
     register1_display.update(theCPU.register1.toString())
-    toggle_reg1_modifier() 
+    update_register1_appearance() 
 
 def update_reg2_display() -> None:
     register2_display.update(theCPU.register2.toString())
-    toggle_reg2_modifier() 
+    update_register2_appearance() 
 
 def update_reg3_display() -> None:
     register3_display.update(theCPU.register3.toString())
-    toggle_reg3_modifier() 
+    update_register3_appearance() 
 
 def update_reg4_display() -> None:
     register4_display.update(theCPU.register4.toString())
-    toggle_reg4_modifier() 
+    update_register4_appearance() 
 
 def update_reg5_display() -> None:
     register5_display.update(theCPU.register5.toString())
-    toggle_reg5_modifier() 
+    update_register5_appearance() 
 
 def update_reg6_display() -> None:
     register6_display.update(theCPU.register6.toString())
-    toggle_reg6_modifier() 
+    update_register6_appearance() 
 
 def update_reg7_display() -> None:
     register7_display.update(theCPU.register7.toString())
-    toggle_reg7_modifier() 
+    update_register7_appearance() 
 
-def update_registers_column_display()->None:
-    clockTickDisplay.update(str(theCPU.theClock))
-    update_reg0_display()
-    update_reg1_display()
-    update_reg2_display()
-    update_reg3_display()
-    update_reg4_display()
-    update_reg5_display()
-    update_reg6_display()
-    update_reg7_display()
+# Functions that set the color and responsivity of the register input fields
+def update_register0_appearance() -> None:
+    update_input_field_appearance(register0_display,setRegister0_Button,theCPU.register0.toString)
+
+def update_register1_appearance() -> None:
+    update_input_field_appearance(register1_display,setRegister1_Button,theCPU.register1.toString)
+
+def update_register2_appearance() -> None:
+    update_input_field_appearance(register2_display,setRegister2_Button,theCPU.register2.toString)
+
+def update_register3_appearance() -> None:
+    update_input_field_appearance(register3_display,setRegister3_Button,theCPU.register3.toString)
+
+def update_register4_appearance() -> None:
+    update_input_field_appearance(register4_display,setRegister4_Button,theCPU.register4.toString)
+
+def update_register5_appearance() -> None:
+    update_input_field_appearance(register5_display,setRegister5_Button,theCPU.register5.toString)
+
+def update_register6_appearance() -> None:
+    update_input_field_appearance(register6_display,setRegister6_Button,theCPU.register6.toString)
+
+def update_register7_appearance() -> None:
+    update_input_field_appearance(register7_display,setRegister7_Button,theCPU.register7.toString)
+
+
+############################## RAM ######################################
 
 ram_address_and_values:typing.List[typing.List[str]]=[["address","value"]]
 ram_table_headings = ["Binary address      ","Binary value      "]
@@ -131,30 +132,66 @@ def toggle_ram_modifier()->None:
         if ram_last_user_address==None:
             return ""
         return theCPU.theRAM.getUsingIntegerAddress(ram_last_user_address).toString()
-    toggle_byte_and_button_settable(ram_update_box,ram_update_ok_button,ram_retriever)
+    update_input_field_appearance(ram_update_box,ram_update_ok_button,ram_retriever)
 
-def toggle_byte_and_button_settable(byteField:sg.In,theButton:sg.Button,dataBinding:callable=None) -> None:
+def mark_ram_dirty(ram_is_dirty:list[bool])->None:
+    ram_is_dirty.pop()
+    ram_is_dirty.append(True)
+    if verbose_window_events == True:
+        print("\nRAM display is dirty: ",ram_is_dirty)
+
+def update_ram_table(ram_is_dirty:list[bool])->None:
+    if verbose_window_events == True:
+        print("\nRAM display is dirty: ",ram_is_dirty)
+    local_ram_is_dirty:bool = ram_is_dirty.pop()
+    if local_ram_is_dirty:
+        ram_states_display_table.update(values=theCPU.theRAM.ramTable())
+    ram_is_dirty.append(False)
+
+
+#################################### Utility Functions ######################################
+
+def update_input_field_appearance(byteField:sg.In,theButton:sg.Button,dataBinding:callable=None) -> None:
     """If the given byte field doesn't have a properly formatted byte string, then deactivate the button and turn the field red.
     If the optional data binding function is given, then the button will be disabled if the field value matches the data returned by the dataBinding."""
-    val:str = byteField.get()
-    disable_button:bool=False
+    val:str = byteField.get() # Intentionally don't handle the case when byteField isn't passed in
+
+    # Check if the value in the bytefield is valid
+    val_is_invalid:bool=False
+    if sim.cpuByte.isValidBinaryString(val) != True:
+        val_is_invalid=True
+    
+    # If possible, we check if the value has actually changed
+    val_is_old:bool = False
     if dataBinding!=None:
         storedVal=dataBinding()
-        disable_button=(val==storedVal)
-    if sim.cpuByte.isValidBinaryString(val):
-        byteField.update(background_color="green")
-        if theButton != None:
-            theButton.update(disabled=disable_button,button_color="green")
-    else:
-        byteField.update(background_color="red")
-        if theButton != None:
-            theButton.update(disabled=True,button_color="red")
+        val_is_old=(val==storedVal)
 
-def update_ram_table()->None:
-    ram_states_display_table.update(values=theCPU.theRAM.ramTable())
+    # Choose the correct color for the field and button based on whether it should be disabled
+    color:str="green"
+    if val_is_invalid==True:
+        color="red"
+    
+    # Recolor and enable/disable the button and data field
+    byteField.update(background_color=color)
+    if theButton != None:
+        theButton.update(disabled=(val_is_old or val_is_invalid),button_color=color)
 
-# This will be a convenient place to put output
-terminal_ouput:sg.Multiline = sg.Multiline(autoscroll=True,size=(80,10),write_only=True,key="STDOUT") #,reroute_stdout=True
+def update_full_display() -> None:
+    """Updates the display of all of the elements in the window."""
+    clockTickDisplay.update(str(theCPU.theClock))
+    update_reg0_display()
+    update_reg1_display()
+    update_reg2_display()
+    update_reg3_display()
+    update_reg4_display()
+    update_reg5_display()
+    update_reg6_display()
+    update_reg7_display()
+    update_ram_modifier()
+    toggle_ram_modifier()
+
+#################################### Display and Layout ######################################
 
 registers_column = [
     [sg.Text("Clock Counter: "),clockTickDisplay],
@@ -165,42 +202,42 @@ registers_column = [
     [
         sg.Text("Register0 (000): "),
         register0_display,
-        register0_ok
+        setRegister0_Button
     ],
     [
         sg.Text("Register1 (001): "),
         register1_display,
-        register1_ok
+        setRegister1_Button
     ],
     [
         sg.Text("Register2 (010): "),
         register2_display,
-        register2_ok
+        setRegister2_Button
     ],
     [
         sg.Text("Register3 (011): "),
         register3_display,
-        register3_ok
+        setRegister3_Button
     ],
     [
         sg.Text("Register4 (100): "),
         register4_display,
-        register4_ok
+        setRegister4_Button
     ],
     [
         sg.Text("Register5 (101): "),
         register5_display,
-        register5_ok
+        setRegister5_Button
     ],
     [
         sg.Text("Register6 (110): "),
         register6_display,
-        register6_ok
+        setRegister6_Button
     ],
     [
         sg.Text("Register7 (111): "),
         register7_display,
-        register7_ok
+        setRegister7_Button
     ]
 
 ]
@@ -235,14 +272,6 @@ layout = [
     ]
 ]
 
-# Create the Window
-window = sg.Window("CPU Simulator", layout,finalize=True)
-terminal_ouput.reroute_stdout_to_here() # we dump stdout here so print commands from the CPU simulator show up nicely.
-update_ram_modifier()
-update_registers_column_display()
-update_ram_table()
-update_ram_modifier()
-toggle_ram_modifier()
 
 # Wire up the RAM and CPU events for display
 def reactToParseML(mlBinaryString:str,matchedCommand:sim.machineLanguageCommand,parsedCommandParams:typing.Sequence)->None:
@@ -278,11 +307,20 @@ def reactToRegister6(oldValue,newValue)->None:
 def reactToRegister7(oldValue,newValue)->None:
     print("\nRegister 7 has changed value from "+oldValue+" to "+newValue)
 
-def reactToRAM(addressAsInt:int,oldValue:str,newValue:str)->None:
+def reactToRAM(ram_is_dirty:list[bool],addressAsInt:int,oldValue:str,newValue:str)->None:
     addressAsByteString:str=sim.cpuByte.unsignedIntegerToBitString(addressAsInt)
     print("\nThe RAM at location ",addressAsByteString," (",str(addressAsInt),") was changed")
     print("Old value: ",oldValue)
     print("New value: ",newValue)
+    mark_ram_dirty(ram_is_dirty)
+
+
+########################### Window Creation and Event Handling #########################
+
+# Create the Window
+window = sg.Window("CPU Simulator", layout,finalize=True)
+terminal_ouput.reroute_stdout_to_here() # we dump stdout here so print commands from the CPU simulator show up nicely.
+ram_is_dirty:list[bool] = [True]
 
 theCPU.onParseML.setReaction(window,reactToParseML)
 theCPU.onAluCommand.setReaction(window,reactToALU)
@@ -294,7 +332,10 @@ theCPU.register4.onChangeEvent.setReaction(window,reactToRegister4)
 theCPU.register5.onChangeEvent.setReaction(window,reactToRegister5)
 theCPU.register6.onChangeEvent.setReaction(window,reactToRegister6)
 theCPU.register7.onChangeEvent.setReaction(window,reactToRegister7)
-theCPU.theRAM.onChangeEvent.setReaction(window,reactToRAM)
+theCPU.theRAM.onChangeEvent.setReaction(window,lambda a,b,c: reactToRAM(ram_is_dirty,a,b,c))
+
+update_ram_table(ram_is_dirty)
+update_full_display()
 
 # Create an event loop to catch events raised by the window itself
 while True:
@@ -311,54 +352,52 @@ while True:
         toggle_ram_modifier()
     if windowEvent == "RAM_OK":
         theCPU.theRAM.setUsingUnsignedIntegerAddressAndBitStringValue(ram_last_user_address,ram_update_box.get())
-        update_ram_table()
+        update_ram_table(ram_is_dirty)
         update_ram_modifier()
         toggle_ram_modifier()
     if windowEvent == "REG0":
-        toggle_reg0_modifier()
+        update_register0_appearance()
     if windowEvent == "R0_OK":
         theCPU.register0.fromString(register0_display.get())
         update_reg0_display()
     if windowEvent == "REG1":
-        toggle_reg1_modifier()
+        update_register1_appearance()
     if windowEvent == "R1_OK":
         theCPU.register1.fromString(register1_display.get())
         update_reg1_display()
     if windowEvent == "REG2":
-        toggle_reg2_modifier()
+        update_register2_appearance()
     if windowEvent == "R2_OK":
         theCPU.register2.fromString(register2_display.get())
         update_reg2_display()
     if windowEvent == "REG3":
-        toggle_reg3_modifier()
+        update_register3_appearance()
     if windowEvent == "R3_OK":
         theCPU.register3.fromString(register3_display.get())
         update_reg3_display()
     if windowEvent == "REG4":
-        toggle_reg4_modifier()
+        update_register4_appearance()
     if windowEvent == "R4_OK":
         theCPU.register4.fromString(register4_display.get())
         update_reg4_display()
     if windowEvent == "REG5":
-        toggle_reg5_modifier()
+        update_register5_appearance()
     if windowEvent == "R5_OK":
         theCPU.register5.fromString(register5_display.get())
         update_reg5_display()
     if windowEvent == "REG6":
-        toggle_reg6_modifier()
+        update_register6_appearance()
     if windowEvent == "R6_OK":
         theCPU.register6.fromString(register6_display.get())
         update_reg6_display()
     if windowEvent == "REG7":
-        toggle_reg7_modifier()
+        update_register7_appearance()
     if windowEvent == "R7_OK":
         theCPU.register7.fromString(register7_display.get())
         update_reg7_display()
     if windowEvent == "TICK":
         theCPU.tick()
-        update_registers_column_display()
-        update_ram_table()
-        update_ram_modifier()
-        toggle_ram_modifier()
+        update_full_display()
+        update_ram_table(ram_is_dirty)
 
 window.close()
