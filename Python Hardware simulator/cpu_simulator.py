@@ -349,12 +349,21 @@ class CPU():
         self.register0:cpuByte=cpuByte() # The RAM address to pull the next instruction from.  Incremented during clock tick 1
         self.register1:cpuByte=cpuByte() # The instruction we're currently working on.  *Only* set during clock tick 0
         self.register2:cpuByte=cpuByte() # Where the ALU will pull its X-input from
-        self.register3:cpuByte=cpuByte() # Where the ALU will pull its X-input from
+        self.register3:cpuByte=cpuByte() # Where the ALU will pull its Y-input from
         self.register4:cpuByte=cpuByte() # Where the ALU will put its output
         self.register5:cpuByte=cpuByte() # Holds a value typically used as a RAM address
         self.register6:cpuByte=cpuByte() # This register can be written to RAM
         self.register7:cpuByte=cpuByte() # This register can be copied from a RAM address
         self.mlCommandList:list[machineLanguageCommand]=self.setupML()
+
+        self.register0_description:str="The RAM address to pull the next instruction from.  Incremented during clock tick 1."
+        self.register1_description:str="The instruction we're currently working on.  *Only* set during clock tick 0."
+        self.register2_description:str="Where the ALU will pull its X-input from"
+        self.register3_description:str="Where the ALU will pull its Y-input from"
+        self.register4_description:str="Where the ALU will put its output"
+        self.register5_description:str="Holds a value typically used as a RAM address"
+        self.register6_description:str="This register can be written to RAM"
+        self.register7_description:str="This register can be copied from a RAM address"
 
         self.onAluCommand:event = event()
         self.onTick:event=event()

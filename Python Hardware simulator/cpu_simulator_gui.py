@@ -200,42 +200,42 @@ registers_column = [
         sg.Text("Registers")
     ],
     [
-        sg.Text("Register0 (000): "),
+        sg.Text("Register0 (000): ",tooltip=theCPU.register0_description),
         register0_display,
         setRegister0_Button
     ],
     [
-        sg.Text("Register1 (001): "),
+        sg.Text("Register1 (001): ",tooltip=theCPU.register1_description),
         register1_display,
         setRegister1_Button
     ],
     [
-        sg.Text("Register2 (010): "),
+        sg.Text("Register2 (010): ",tooltip=theCPU.register2_description),
         register2_display,
         setRegister2_Button
     ],
     [
-        sg.Text("Register3 (011): "),
+        sg.Text("Register3 (011): ",tooltip=theCPU.register3_description),
         register3_display,
         setRegister3_Button
     ],
     [
-        sg.Text("Register4 (100): "),
+        sg.Text("Register4 (100): ",tooltip=theCPU.register4_description),
         register4_display,
         setRegister4_Button
     ],
     [
-        sg.Text("Register5 (101): "),
+        sg.Text("Register5 (101): ",tooltip=theCPU.register5_description),
         register5_display,
         setRegister5_Button
     ],
     [
-        sg.Text("Register6 (110): "),
+        sg.Text("Register6 (110): ",tooltip=theCPU.register6_description),
         register6_display,
         setRegister6_Button
     ],
     [
-        sg.Text("Register7 (111): "),
+        sg.Text("Register7 (111): ",tooltip=theCPU.register7_description),
         register7_display,
         setRegister7_Button
     ]
@@ -312,7 +312,8 @@ def reactToRAM(ram_is_dirty:list[bool],addressAsInt:int,oldValue:str,newValue:st
     print("\nThe RAM at location ",addressAsByteString," (",str(addressAsInt),") was changed")
     print("Old value: ",oldValue)
     print("New value: ",newValue)
-    mark_ram_dirty(ram_is_dirty)
+    if oldValue!=newValue:
+        mark_ram_dirty(ram_is_dirty)
 
 
 ########################### Window Creation and Event Handling #########################
