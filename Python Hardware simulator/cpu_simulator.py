@@ -331,7 +331,7 @@ class machineLanguageCommand:
     def __init__(self) -> None:
         self.reMatch:str="" # regular expression matcher
         self.description:str="" # human readable description
-        self.action:callable = (lambda aSequenceOfStrings : None) # default to doing no action
+        self.action:callable[list[str]] = (lambda aSequenceOfStrings : None) # default to doing no action
 
     def tryStringMatchesCommand(self,mlBinaryString:str) -> typing.Sequence[str]:
         """If the binary string matches this command, the parameter sequence parsed from the binary string will be returned."""
@@ -339,7 +339,6 @@ class machineLanguageCommand:
         if reResult==None:
             return None
         return reResult.groups()
-
 
 class CPU():
 
