@@ -525,3 +525,189 @@ def test_cpu_tick_R0updated():
     theCpu.tick()
     assert theCpu.theClock==0
     assert theCpu.register0.asUnsignedInteger()==2
+
+def test_cpu_storeCommand_ramUpdated():
+    binaryCommand:str="0000000000000000" # A binary representation of the STORE cpu command
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryCommand) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    address:int=71 # some random RAM address
+    theCpu.theRAM.setUsingUnsignedIntegerAddressAndBitStringValue(address,"0000000000000000") # set the RAM address to all 0
+    assert theCpu.theRAM.getUsingIntegerAddress(address).toString()=="0000000000000000" # verify that the RAM address is cleared out
+    theCpu.register5.setFromUnsignedInteger(address)
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7)
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU run
+    assert theCpu.theRAM.getUsingIntegerAddress(address).toString()=="1111111111111111" # verify that the RAM address is properly set
+
+def test_cpu_loadCommand_registerUpdated():
+    binaryCommand:str="0000000000000001" # A binary representation of the LOAD command
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryCommand) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    address:int=3471 # some random RAM address
+    theCpu.theRAM.setUsingUnsignedIntegerAddressAndBitStringValue(address,"1010101010101010") # Set the RAM at the specified address
+    theCpu.register5.setFromUnsignedInteger(address)
+    reg6="1111111111111111"
+    theCpu.register6.fromString(reg6) # set register6 so we can verify that its overwritten
+    assert theCpu.register6.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register6.toString()=="1010101010101010" # verify that the RAM address is properly set
+
+def test_cpu_setLowCommand_00000000_registerUpdated():
+    binaryRepresentation="0000000000000010"
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7) # set register7 so we can verify that its overwritten
+    assert theCpu.register7.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register7.toString()=="1111111100000000" # verify that the RAM address is properly set
+
+def test_cpu_setLowCommand_00000001_registerUpdated():
+    binaryRepresentation="0000000000001010"
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7) # set register7 so we can verify that its overwritten
+    assert theCpu.register7.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register7.toString()=="1111111100000001" # verify that the RAM address is properly set
+
+def test_cpu_setLowCommand_00100000_registerUpdated():
+    binaryRepresentation="0000000100000010"
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7) # set register7 so we can verify that its overwritten
+    assert theCpu.register7.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register7.toString()=="1111111100100000" # verify that the RAM address is properly set
+
+def test_cpu_setTopCommand_00000000_registerUpdated():
+    binaryRepresentation="0000000000000011"
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7) # set register7 so we can verify that its overwritten
+    assert theCpu.register7.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register7.toString()=="0000000011111111" # verify that the RAM address is properly set
+
+def test_cpu_setTopCommand_00000001_registerUpdated():
+    binaryRepresentation="0000000000001011"
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7) # set register7 so we can verify that its overwritten
+    assert theCpu.register7.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register7.toString()=="0000000111111111" # verify that the RAM address is properly set
+
+def test_cpu_setTopCommand_00100000_registerUpdated():
+    binaryRepresentation="0000000100000011"
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg7="1111111111111111"
+    theCpu.register7.fromString(reg7) # set register7 so we can verify that its overwritten
+    assert theCpu.register7.toString()=="1111111111111111"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register7.toString()=="0010000011111111" # verify that the RAM address is properly set
+
+def test_cpu_copyCommand_010_110_TargetUpdated():
+    targetReg="010"
+    sourceReg="110"
+    binaryRepresentation="0000000"+targetReg+sourceReg+"100" # target:010 (2) source:110 (6)
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    targetRegister=theCpu.getRegister(targetReg)
+    targetRegister.fromString("1111111111111111") 
+    assert targetRegister.toString()=="1111111111111111"
+    sourceRegister=theCpu.getRegister(sourceReg)
+    sourceRegister.fromString("0101010101010101") # set register6 so we can verify that its overwritten
+    assert sourceRegister.toString()=="0101010101010101"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert targetRegister.toString()=="0101010101010101" # verify that the RAM address is properly set
+
+def test_cpu_copyCommand_010_110_SourceUnchanged():
+    targetReg="010"
+    sourceReg="110"
+    binaryRepresentation="0000000"+targetReg+sourceReg+"100" # target:010 (2) source:110 (6)
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    targetRegister=theCpu.getRegister(targetReg)
+    targetRegister.fromString("1111111111111111") 
+    assert targetRegister.toString()=="1111111111111111"
+    sourceRegister=theCpu.getRegister(sourceReg)
+    sourceRegister.fromString("0101010101010101") # set register6 so we can verify that its overwritten
+    assert sourceRegister.toString()=="0101010101010101"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert sourceRegister.toString()=="0101010101010101" # verify that the RAM address is properly set
+
+def test_cpu_copyCommand_001_110_TargetUnchanged():
+    targetReg="001"
+    sourceReg="110"
+    binaryRepresentation="0000000"+targetReg+sourceReg+"100" # target:010 (2) source:110 (6)
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    targetRegister=theCpu.getRegister(targetReg)
+    targetRegister.fromString("1111111111111111") 
+    assert targetRegister.toString()=="1111111111111111"
+    sourceRegister=theCpu.getRegister(sourceReg)
+    sourceRegister.fromString("0101010101010101") # set register6 so we can verify that its overwritten
+    assert sourceRegister.toString()=="0101010101010101"
+
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert targetRegister.toString()=="1111111111111111" # verify that the RAM address is properly set
