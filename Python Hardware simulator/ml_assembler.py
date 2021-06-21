@@ -27,7 +27,7 @@ class assemblyLanguage:
     def __init__(self)->None:
         self.commands:list[assemblyLanguageCommand] = self.setupAL()
 
-    def findAndParseAssemblyCommand(self,commandString:str) -> tuple[assemblyLanguageCommand,list[str],str]:
+    def findAndParseAssemblyCommand(self,commandString:str) -> str:
         """Given an input string, this finds the matching assembly language command and returns the command, the arguments parsed out of the string, and the binary string."""
         matchedCommand:assemblyLanguageCommand = None
         parsedCommandParams:list[str] = []
@@ -39,8 +39,8 @@ class assemblyLanguage:
             matchedCommand=command
             break
         if matchedCommand == None:
-            return None,None,None
-        return matchedCommand,parsedCommandParams,binaryRepresentation
+            return None
+        return binaryRepresentation
 
     def setupAL(self) -> list[assemblyLanguageCommand]:
         returnList:list[assemblyLanguageCommand] = []
@@ -166,7 +166,7 @@ class assemblyLanguage:
         returnList.append(negR3Command)
 
         r2PlusR3Command:assemblyLanguageCommand=assemblyLanguageCommand()
-        r2PlusR3Command.reMatch="R2+R3"
+        r2PlusR3Command.reMatch="R2\+R3"
         r2PlusR3Command.description="Places the value of register2 + register3 into register4."
         r2PlusR3Command.convertToBinary = lambda stringList : "0000000010000101"
         returnList.append(r2PlusR3Command)
@@ -190,21 +190,122 @@ class assemblyLanguage:
         returnList.append(sumCommand)
 
         r2MinusR3Command:assemblyLanguageCommand=assemblyLanguageCommand()
-        r2MinusR3Command.reMatch="R2-R3"
+        r2MinusR3Command.reMatch="R2\-R3"
         r2MinusR3Command.description="Places the value of register2-register3 into register4."
         r2MinusR3Command.convertToBinary = lambda stringList : "0000010011000101"
         returnList.append(r2MinusR3Command)
 
         r2MinusR3JumpIfNegCommand:assemblyLanguageCommand=assemblyLanguageCommand()
-        r2MinusR3JumpIfNegCommand.reMatch="R2-R3 IF NEG JUMP ([01]{3})"
+        r2MinusR3JumpIfNegCommand.reMatch="R2\-R3 IF NEG JUMP ([01]{3})"
         r2MinusR3JumpIfNegCommand.description="Places the value of register2-register3 into register4.  If the value placed in register4 is negative, the value from the register in the given argument will be copied into register0, causing code flow to 'jump'."
         r2MinusR3JumpIfNegCommand.convertToBinary = lambda stringList : "0001010011"+stringList[0]+"101"
         returnList.append(r2MinusR3JumpIfNegCommand)
 
         r2MinusR3JumpIfZeroCommand:assemblyLanguageCommand=assemblyLanguageCommand()
-        r2MinusR3JumpIfZeroCommand.reMatch="R2-R3 IF ZERO JUMP ([01]{3})"
+        r2MinusR3JumpIfZeroCommand.reMatch="R2\-R3 IF ZERO JUMP ([01]{3})"
         r2MinusR3JumpIfZeroCommand.description="Places the value of register2-register3 into register4.  If the value placed in register4 is negative, the value from the register in the given argument will be copied into register0, causing code flow to 'jump'."
         r2MinusR3JumpIfZeroCommand.convertToBinary = lambda stringList : "0010010011"+stringList[0]+"101"
         returnList.append(r2MinusR3JumpIfZeroCommand)
 
+        passCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        passCommand.reMatch="PASS"
+        passCommand.description="Does nothing.  This usually shouldn't be used"
+        passCommand.convertToBinary = lambda stringList : "0000000000000111"
+        returnList.append(passCommand)
+
         return returnList
+
+
+class assembler:
+    """A class to hold the parsers for the assembly language, as well as the symbol table and assembled binary code."""
+    
+    def __init__(self)->None:
+        self.assemblyCommands:assemblyLanguage = assemblyLanguage()
+        self.symbolTable:dict = dict()
+        self.symbolPattern:str=r"({[A-Za-z]+[A-Za-z0-9]*})"
+        self.valuePattern:str=r"(([01]{8}){1,2})"
+
+    def parseExplicitLabel(self,labelString:str)->bool:
+        """Tries to parse a line of assembly code as if it's an explicit label.  If this is possible, the symbol table is updated and True is returned.  Otherwise, returns False."""
+        pattern:str=self.symbolPattern+":"+self.valuePattern
+        reResults=re.fullmatch(pattern,labelString) # An explicit label like "{foo}:10101010" or "{bar}:11111111000000000"
+        if reResults==None:
+            return False
+        label:str=reResults.groups()[0]
+        value:str=reResults.groups()[1]
+        if label in self.symbolTable:
+            raise RuntimeError("Assembler cannot re-use labels.")
+        self.symbolTable[label]=value
+        return True
+
+    def cleanWhiteSpace(self,linesOfCode:list[str])->list[str]:
+        """Cleans up the whitespace in the lines of code, and removes blank lines."""
+        outputLines:list[str]=[]
+        for line in linesOfCode:
+            line=line.rstrip().lstrip() # strip leading and trailing whitespaces
+            line=line.replace("\t"," ") # remove tabs
+            while line.find("  ")>=0:
+                line=line.replace("  "," ") # remove repeated spaces
+            if line=="":
+                continue # skip all blank lines
+            outputLines.append(line)
+        return outputLines
+
+    def symbolHandler1_ExplicitLabels(self,linesOfCode:list[str])->list[str]:
+        """The 1st step in the assembler.  This builds the symbol table and removes all explicit label declarations from the code."""
+        outputLines:list[str]=[]
+        for line in linesOfCode:
+            if self.parseExplicitLabel(line):
+                continue # This was a line that contained an explicit label.  It's been added to the symbol table, so we don't need to copy the line to the output
+            outputLines.append(line) # Not an explicit label, so we add it to the code
+        return outputLines
+    
+    def symbolHandler2_LinesLabels(self,linesOfCode:list[str])->list[str]:
+        """The 2nd step in the assembler.  This parses lines of assembler code including labels and returns a new list of assembler code with all position labels replaced with explicit labels.  After this step, the line counts must not change!"""
+        outputLines:list[str]=[]
+        pattern:str=self.symbolPattern+":" # a line label like "{zorp}:" or "{feep}:"
+        for line in linesOfCode:
+            reResults=re.fullmatch(pattern,line) 
+            if reResults==None:
+                outputLines.append(line) # this is not a line label
+            else: # turn line label like "{foo}:" into an explicit label like "{foo2}:0000000011111111" and parse it
+                nextOutLine:str=cpu.cpuByte.unsignedIntegerToBitString(len(outputLines)) # get the binary representation of the next line's position in the output
+                self.parseExplicitLabel(line+nextOutLine) 
+        return outputLines
+
+    def symbolHandler3_ReplaceSymbols(self,linesOfCode:list[str])->list[str]:
+        """The 3rd step in the assembler.  Replaces any label (e.g. "{foo}" or "{bar}") with the value from the symbol table.  So "SETTOPBITS {foo}" might be reset to "SETTOPBITS 10101010".  If any curly brackets remain when this is done, an error is thrown."""
+        outputLines:list[str]=[]
+        for line in linesOfCode:
+            reResults=re.search(self.symbolPattern,line)
+            while reResults!=None:
+                # At this point we have one or more symbols to replace
+                symb=reResults.groups()[0]
+                line=line.replace(symb,self.symbolTable[symb]) # this is intentionally very delicate and will throw an error if the label syntax is screwy
+                reResults=re.search(self.symbolPattern,line)
+            # at this point, we should have replaced all labels
+            reResults=re.search("[}{:]",line)
+            if reResults!=None:
+                raise RuntimeError("Unmatched curly bracket, undefined symbol, or lone colon encountered.")
+            outputLines.append(line)
+        return outputLines
+
+    def parseToBinary(self,linesOfCode:list[str])->list[str]:
+        """The 4th step in the assembler.  Converts the assembly language code (e.g. "SUM" or "R2+R3 IF ZERO JUMP 010") to binary code."""
+        outputLines:list[str]=[]
+        for line in linesOfCode:
+            binaryRepresentation=self.assemblyCommands.findAndParseAssemblyCommand(line)
+            if binaryRepresentation==None:
+                raise RuntimeError("Could not resolve the assembly language command: "+line)
+            outputLines.append(binaryRepresentation)
+        return outputLines
+
+    def compile(self,linesOfCode:list[str])->list[str]:
+        """The complete parser and compiler.  This converts lines of assembler code (with labels) to binary code."""
+        linesOfCodeWithoutWhitespace = self.cleanWhiteSpace(linesOfCode)
+        linesOfCodeWithoutExplicitLabels = self.symbolHandler1_ExplicitLabels(linesOfCodeWithoutWhitespace)
+        linesOfCodeWithoutLineLabels=self.symbolHandler2_LinesLabels(linesOfCodeWithoutExplicitLabels)
+        linesOfCodeWithoutAnyLabels=self.symbolHandler3_ReplaceSymbols(linesOfCodeWithoutLineLabels)
+        linesOfBinary=self.parseToBinary(linesOfCodeWithoutAnyLabels)
+        return linesOfBinary
+

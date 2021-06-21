@@ -1,13 +1,13 @@
 import typing
 import PySimpleGUI as sg
-from PySimpleGUI.PySimpleGUI import Button, Column, Text, ThisRow # used to draw the cpu simulator GUI
+#from PySimpleGUI.PySimpleGUI import Button, Column, Text, ThisRow # used to draw the cpu simulator GUI
 import cpu_simulator as sim # used to simulate hardware
 
 # A GUI front-end for a cpu simulator.
 # Based on PySimpleGUI, which is found on the web here:  https://pysimplegui.readthedocs.io/en/latest/
 # A quick tutorial is here:  https://realpython.com/pysimplegui-python/#installing-pysimplegui
 
-verbose_window_events:bool = True 
+verbose_window_events:bool = False # True # 
 
 # The data model and controller
 theCPU:sim.CPU = sim.CPU()
