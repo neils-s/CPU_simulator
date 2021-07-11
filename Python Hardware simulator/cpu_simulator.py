@@ -79,7 +79,7 @@ class cpuByte:
     
     def setBitsFromString(self,offset:int,bitString:str) -> None:
         """Sets a collection of bits in the cpuByte to match the specified string.  If the bit string is too long or offset is too large, this will (rightly) throw an error."""
-        span:tuple[int,int] = re.search("[01].*",bitString).span()
+        span:tuple[int,int] = re.fullmatch("[01].*",bitString).span()
         if len(bitString) != (span[1]-span[0]):
             raise Exception("(Partial) bitstrings need to be composed of only 0 and 1.  Incorrect value: "+bitString)
         oldValue:str = self.toString()
@@ -331,15 +331,14 @@ class machineLanguageCommand:
     def __init__(self) -> None:
         self.reMatch:str="" # regular expression matcher
         self.description:str="" # human readable description
-        self.action:callable = (lambda aSequenceOfStrings : None) # default to doing no action
+        self.action:callable[list[str]] = (lambda aSequenceOfStrings : None) # default to doing no action
 
     def tryStringMatchesCommand(self,mlBinaryString:str) -> typing.Sequence[str]:
         """If the binary string matches this command, the parameter sequence parsed from the binary string will be returned."""
-        reResult=re.search(self.reMatch,mlBinaryString)
+        reResult=re.fullmatch(self.reMatch,mlBinaryString)
         if reResult==None:
             return None
         return reResult.groups()
-
 
 class CPU():
 
@@ -349,12 +348,21 @@ class CPU():
         self.register0:cpuByte=cpuByte() # The RAM address to pull the next instruction from.  Incremented during clock tick 1
         self.register1:cpuByte=cpuByte() # The instruction we're currently working on.  *Only* set during clock tick 0
         self.register2:cpuByte=cpuByte() # Where the ALU will pull its X-input from
-        self.register3:cpuByte=cpuByte() # Where the ALU will pull its X-input from
+        self.register3:cpuByte=cpuByte() # Where the ALU will pull its Y-input from
         self.register4:cpuByte=cpuByte() # Where the ALU will put its output
         self.register5:cpuByte=cpuByte() # Holds a value typically used as a RAM address
         self.register6:cpuByte=cpuByte() # This register can be written to RAM
         self.register7:cpuByte=cpuByte() # This register can be copied from a RAM address
         self.mlCommandList:list[machineLanguageCommand]=self.setupML()
+
+        self.register0_description:str="The RAM address to pull the next instruction from.  Incremented during clock tick 1."
+        self.register1_description:str="The instruction we're currently working on.  *Only* set during clock tick 0."
+        self.register2_description:str="Where the ALU will pull its X-input from"
+        self.register3_description:str="Where the ALU will pull its Y-input from"
+        self.register4_description:str="Where the ALU will put its output"
+        self.register5_description:str="Holds a value typically used as a RAM address"
+        self.register6_description:str="This register can be written to RAM"
+        self.register7_description:str="This register can be copied from a RAM address"
 
         self.onAluCommand:event = event()
         self.onTick:event=event()
@@ -463,13 +471,13 @@ class CPU():
         setlowCommand:machineLanguageCommand=machineLanguageCommand()
         setlowCommand.reMatch=".{5}([01]{8})010"
         setlowCommand.description="Commands of the form '.....dddddddd010' set the low (rightmost) 8 bits of register7 to the literal value specifed by the 'dddddddd' bits of this command."
-        setlowCommand.action=lambda aSequence : self.register7.setBitsFromString(0,aSequence[0])
+        setlowCommand.action=lambda aSequence : self.register7.setBitsFromString(8,aSequence[0])
         returnList.append(setlowCommand)
 
         settopCommand:machineLanguageCommand=machineLanguageCommand()
         settopCommand.reMatch=".{5}([01]{8})011"
         settopCommand.description="Commands of the form '.....dddddddd011' set the high (leftmost) 8 bits of register7 to the literal value specifed by the 'dddddddd' bits of this command."
-        settopCommand.action=lambda aSequence : self.register7.setBitsFromString(8,aSequence[0])
+        settopCommand.action=lambda aSequence : self.register7.setBitsFromString(0,aSequence[0])
         returnList.append(settopCommand)
 
         copyCommand:machineLanguageCommand=machineLanguageCommand()
@@ -486,13 +494,13 @@ class CPU():
 
         noCommand1:machineLanguageCommand=machineLanguageCommand()
         noCommand1.reMatch=".{13}110"
-        noCommand1.description="The CPU doesn't use this command, and no load bits will get set.  Essentially, this is a 'pass' directive."
+        noCommand1.description="The CPU doesn't use this command, and no load bits will get set.  Essentially, this is a 'pass' or 'no-op' directive."
         noCommand1.action = lambda aSequence : None
         returnList.append(noCommand1)
 
         noCommand2:machineLanguageCommand=machineLanguageCommand()
         noCommand2.reMatch=".{13}111"
-        noCommand2.description="The CPU doesn't use this command, and no load bits will get set.  Essentially, this is a 'pass' directive."
+        noCommand2.description="The CPU doesn't use this command, and no load bits will get set.  Essentially, this is a 'pass' or 'no-op' directive."
         noCommand2.action = lambda aSequence : None
         returnList.append(noCommand2)
 
