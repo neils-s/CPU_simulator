@@ -222,13 +222,13 @@ class assembler:
     def __init__(self)->None:
         self.assemblyCommands:assemblyLanguage = assemblyLanguage()
         self.symbolTable:dict = dict()
-        self.symbolPattern:str=r"({[A-Za-z]+[A-Za-z0-9]*})"
-        self.valuePattern:str=r"(([01]{8}){1,2})"
+        self.symbolPattern:str=r"({[A-Za-z]+[A-Za-z0-9]*})" # An example would be {foo} or {bar}
+        self.valuePattern:str=r"(([01]{8}){1,2})" # Either 8 or 16 bits
 
     def parseExplicitLabel(self,labelString:str)->bool:
         """Tries to parse a line of assembly code as if it's an explicit label.  If this is possible, the symbol table is updated and True is returned.  Otherwise, returns False."""
-        pattern:str=self.symbolPattern+":"+self.valuePattern
-        reResults=re.fullmatch(pattern,labelString) # An explicit label like "{foo}:10101010" or "{bar}:11111111000000000"
+        pattern:str=self.symbolPattern+":"+self.valuePattern # An explicit label like "{foo}:10101010" or "{bar}:11111111000000000"
+        reResults=re.fullmatch(pattern,labelString) 
         if reResults==None:
             return False
         label:str=reResults.groups()[0]

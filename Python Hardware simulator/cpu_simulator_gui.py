@@ -1,13 +1,14 @@
 import typing
 import PySimpleGUI as sg
-#from PySimpleGUI.PySimpleGUI import Button, Column, Text, ThisRow # used to draw the cpu simulator GUI
+from PySimpleGUI.PySimpleGUI import popup, popup_error
 import cpu_simulator as sim # used to simulate hardware
+import ml_assembler
 
 # A GUI front-end for a cpu simulator.
 # Based on PySimpleGUI, which is found on the web here:  https://pysimplegui.readthedocs.io/en/latest/
 # A quick tutorial is here:  https://realpython.com/pysimplegui-python/#installing-pysimplegui
 
-verbose_window_events:bool = False # True # 
+verbose_window_events:bool = True # False # 
 
 # The data model and controller
 theCPU:sim.CPU = sim.CPU()
@@ -145,9 +146,13 @@ def update_ram_table(ram_is_dirty:list[bool])->None:
         print("\nRAM display is dirty: ",ram_is_dirty)
     local_ram_is_dirty:bool = ram_is_dirty.pop()
     if local_ram_is_dirty:
+        if verbose_window_events:
+            print("Updating RAM display")
         ram_states_display_table.update(values=theCPU.theRAM.ramTable())
     ram_is_dirty.append(False)
-
+    if verbose_window_events == True:
+        print("\nRAM display is dirty: ",ram_is_dirty)
+        
 
 #################################### Utility Functions ######################################
 
@@ -191,9 +196,112 @@ def update_full_display() -> None:
     update_ram_modifier()
     toggle_ram_modifier()
 
+#################################### File Handlers ####################################
+
+def loadBinaryFile(startingRam:int=0):
+    fname = sg.popup_get_file('Binary RAM file to open')
+    if verbose_window_events == True:
+        print("\nFile to open: ",fname)
+    if not fname:
+        return # no filename passed in, or read was cancelled, so we return to normal program flo
+    fileReader=None
+    try:
+        fileReader=open(fname,'r')
+        if verbose_window_events == True:
+            print("file ",fname," opened")
+        count=0
+        ramAddress=startingRam
+        while True:
+            count = count+1
+            line=fileReader.readline()
+            if not line: # stop if we've reached the end of the file
+                break
+            if verbose_window_events==True:
+                print("Line read from file: '"+line+"'")
+            binary = line.strip()
+            if not binary: # skip blank lines
+                continue
+            if sim.cpuByte.isValidBinaryString(binary) != True: # check for lines that aren't binary
+                sg.popup_error('Error on line '+str(count))
+                break
+            theCPU.theRAM.setUsingUnsignedIntegerAddressAndBitStringValue(ramAddress,binary)
+            ramAddress=ramAddress+1
+    except:
+        sg.popup('Could not open file')
+        return # There's no open file reader here, so there's nothing to close
+    finally:
+        if fileReader != None:
+            fileReader.close()
+            if verbose_window_events==True:
+                print("file ",fname," closed")
+
+def saveBinaryFile(startingRam:int=0,endingRam:int=theCPU.theRAM._addressCount):
+    fname = sg.popup_get_file('Binary RAM file save RAM to')
+    if verbose_window_events == True:
+        print("\nFile to open: ",fname)
+    if not fname:
+        return # no filename passed in, or read was cancelled, so we return to normal program flo
+    fileWriter=None
+    try:
+        fileWriter=open(fname,'w')
+        if verbose_window_events == True:
+            print("file ",fname," opened")
+        binaryList=[]
+        for ramAddress in range(startingRam,endingRam):
+            binary = theCPU.theRAM.getUsingIntegerAddress(ramAddress).toString()+"\n"
+            binaryList.append(binary)
+        fileWriter.writelines(binaryList)
+    except:
+        sg.popup('Could not open file')
+        return # There's no open file reader here, so there's nothing to close
+    finally:
+        if fileWriter != None:
+            fileWriter.close()
+            if verbose_window_events==True:
+                print("file ",fname," closed")
+
+def loadAssemblyFile(startingRam:int=0):
+    fname = sg.popup_get_file('Binary RAM file to open')
+    if verbose_window_events == True:
+        print("\nFile to open: ",fname)
+    if not fname:
+        return # no filename passed in, or read was cancelled, so we return to normal program flo
+    fileReader=None
+    try:
+        fileReader=open(fname,'r')
+        if verbose_window_events == True:
+            print("file ",fname," opened")
+        assemblyLines:list(str)=fileReader.readlines()
+        theAssembler = ml_assembler.assembler()
+        binaryLines=None
+        try:
+            binaryLines=theAssembler.compile(assemblyLines)
+        except Exception as e:
+            if verbose_window_events:
+                print("Compiler error: "+str(e))
+            sg.popup_error("Error compiling file:\n"+str(e))
+        if binaryLines!=None:
+            for whichBinaryLine in range(0,len(binaryLines)):
+                ramAddress=startingRam+whichBinaryLine
+                binary=binaryLines[whichBinaryLine].strip()
+                theCPU.theRAM.setUsingUnsignedIntegerAddressAndBitStringValue(ramAddress,binary)
+    except:
+        sg.popup('Could not open file')
+        return # There's no open file reader here, so there's nothing to close
+    finally:
+        if fileReader != None:
+            fileReader.close()
+            if verbose_window_events==True:
+                print("file ",fname," closed")
+
 #################################### Display and Layout ######################################
 
 registers_column = [
+
+    [
+        sg.Button(button_text="CPU Tick",key="TICK")
+        ,sg.Button(button_text="Reset CPU",key="RESET")
+    ],
     [sg.Text("Clock Counter: "),clockTickDisplay],
     [sg.HorizontalSeparator()],
     [
@@ -243,6 +351,11 @@ registers_column = [
 ]
 ram_column = [
     [
+        sg.Button(button_text="Load Assembly file",key="LOADASM"),
+        sg.Button(button_text="Load Binary RAM file",key="LOAD"),
+        sg.Button(button_text="Save Binary RAM file",key="SAVE")
+    ],
+    [
         sg.Text("RAM")
     ],
     [
@@ -262,13 +375,13 @@ layout = [
     [
         sg.Column(registers_column),
         sg.VSeperator(),
-        sg.Column(ram_column) #size in pixels ,size=(600,300)
+        sg.Column(ram_column)
     ],
     [
         sg.Column(terminal_section, element_justification="center",justification="center")
     ],
     [
-        sg.Button(button_text="CPU Tick",key="TICK"), sg.Button(key="CLOSE_BUTTON",button_text="Close")
+        sg.Button(key="CLOSE_BUTTON",button_text="Close")
     ]
 ]
 
@@ -345,6 +458,14 @@ while True:
         print("\nWindow event: ",windowEvent,values)
     if windowEvent == "CLOSE_BUTTON" or windowEvent == sg.WIN_CLOSED:
         break # end the program if the user closes the window or clicks the OK button
+    if windowEvent == "LOAD":
+        loadBinaryFile()
+        update_ram_table(ram_is_dirty)
+    if windowEvent == "LOADASM":
+        loadAssemblyFile()
+        update_ram_table(ram_is_dirty)
+    if windowEvent == "SAVE":
+        saveBinaryFile()
     if windowEvent == "RAM_TABLE":
         ram_last_user_address=values["RAM_TABLE"][0]
         update_ram_modifier()
@@ -356,6 +477,9 @@ while True:
         update_ram_table(ram_is_dirty)
         update_ram_modifier()
         toggle_ram_modifier()
+    if windowEvent == "RESET":
+        theCPU.register0.fromString("0000000000000000")
+        update_reg0_display()
     if windowEvent == "REG0":
         update_register0_appearance()
     if windowEvent == "R0_OK":
