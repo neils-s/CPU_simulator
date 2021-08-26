@@ -35,7 +35,8 @@ def writeBinaryFile(binaryFile:str,binaryCode:list[str],verbose:bool)->bool:
         if verbose:
             print("\nWriting file ",binaryFile)
         fileWriter=open(binaryFile,'w')
-        fileWriter.writelines(binaryCode)
+        for line in binaryCode:
+            fileWriter.write(line+"\n")
     except Exception as e:
         print("Error writing output file.")
         if verbose:
@@ -64,7 +65,7 @@ def compile(assemblyCode:list[str],verbose:bool,theAssembler:ml_assembler.assemb
             for line in linesOfCodeWithoutExplicitLabels:
                 print("  ",line)
             print("Symbol table:")
-            for key,value in theAssembler.symbolTable:
+            for key,value in theAssembler.symbolTable.items():
                 print("  ",key," : ",value)
 
         if verbose:
@@ -75,7 +76,7 @@ def compile(assemblyCode:list[str],verbose:bool,theAssembler:ml_assembler.assemb
             for line in linesOfCodeWithoutLineLabels:
                 print("  ",line)
             print("Symbol table:")
-            for key,value in theAssembler.symbolTable:
+            for key,value in theAssembler.symbolTable.items():
                 print("  ",key," : ",value)
 
         if verbose:
@@ -87,7 +88,7 @@ def compile(assemblyCode:list[str],verbose:bool,theAssembler:ml_assembler.assemb
                 print("  ",line)
 
         if verbose:
-            print("Converting explicit assembly language code to binary...")
+            print("\nConverting explicit assembly language code to binary...")
         linesOfBinary=theAssembler.parseToBinary(linesOfCodeWithoutAnyLabels)
         if verbose:
             print("Binary code:")
