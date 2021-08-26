@@ -77,13 +77,13 @@ class assemblyLanguage:
 
         aluCommand:assemblyLanguageCommand=assemblyLanguageCommand()
         aluCommand.reMatch="ALU ([01]{6})"
-        aluCommand.description="Performs the ALU command indicated by the 6 bits given in the first argument.  The inputs to the command are register2 and register4.  The output is placed in register4."
+        aluCommand.description="Performs the ALU command indicated by the 6 bits given in the first argument.  The inputs to the command are register2 and register3.  The output is placed in register4."
         aluCommand.convertToBinary = lambda stringList : "00"+"00"+stringList[0]+"000"+"101"
         returnList.append(aluCommand)
 
         aluWithJumpCommand:assemblyLanguageCommand=assemblyLanguageCommand()
         aluWithJumpCommand.reMatch="ALU ([01]{6}) IF ([01]{2}) JUMP ([01]{3})"
-        aluWithJumpCommand.description="Performs that ALU command indicated by the 6 bits given in the first argument.  The inputs to the command are register2 and register4.  The output is placed in register4.  If the output of the ALU operation is negative or zero (depending on the 2nd argument), then the value of the register indicated by the 3rd argument will be copied to register0.  This will cause code flow to 'jump'."
+        aluWithJumpCommand.description="Performs that ALU command indicated by the 6 bits given in the first argument.  The inputs to the command are register2 and register3.  The output is placed in register4.  If the output of the ALU operation is negative or zero (depending on the 2nd argument), then the value of the register indicated by the 3rd argument will be copied to register0.  This will cause code flow to 'jump'."
         aluWithJumpCommand.convertToBinary = lambda stringList : "00"+stringList[1]+stringList[0]+stringList[2]+"101"
         returnList.append(aluWithJumpCommand)
         
@@ -222,12 +222,12 @@ class assembler:
     def __init__(self)->None:
         self.assemblyCommands:assemblyLanguage = assemblyLanguage()
         self.symbolTable:dict = dict()
-        self.symbolPattern:str=r"({[A-Za-z]+[A-Za-z0-9]*})" # An example would be {foo} or {bar}
+        self.symbolPattern:str=r"({[A-Za-z]+[A-Za-z0-9]*})" # An example would be {foo} or {bar0}
         self.valuePattern:str=r"(([01]{8}){1,2})" # Either 8 or 16 bits
 
     def parseExplicitLabel(self,labelString:str)->bool:
         """Tries to parse a line of assembly code as if it's an explicit label.  If this is possible, the symbol table is updated and True is returned.  Otherwise, returns False."""
-        pattern:str=self.symbolPattern+":"+self.valuePattern # An explicit label like "{foo}:10101010" or "{bar}:11111111000000000"
+        pattern:str=self.symbolPattern+":"+self.valuePattern # An explicit label like "{foo}:10101010" or "{bar0}:11111111000000000"
         reResults=re.fullmatch(pattern,labelString) 
         if reResults==None:
             return False
