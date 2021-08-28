@@ -68,6 +68,27 @@ def test_executeAssemblyCommand_ADD_register4Set():
     theCpu.tick() # let the CPU execute the specified command in register1
     assert theCpu.register4.toString()=="1111111101010101" # verify that output register
 
+def test_executeAssemblyCommand_COPYR2R3_register3Set():
+    thisAssemblyLanguageInstance:assemb.assemblyLanguage = assemb.assemblyLanguage()
+    commandString="COPY R2 R3"
+    binaryRepresentation = thisAssemblyLanguageInstance.findAndParseAssemblyCommand(commandString)
+    theCpu:cpu_simulator.CPU = cpu_simulator.CPU()
+    theCpu.theClock=1 # The next tick of the CPU will execute the command in register1
+    theCpu.register1.fromString(binaryRepresentation) # Store the command in register1
+    
+    # Set up conditions to test the CPU command
+    reg2="1111111100000000"
+    theCpu.register2.fromString(reg2) # set register2 so we can verify that its overwritten
+    assert theCpu.register2.toString()==reg2
+    reg3="0000000001010101"
+    theCpu.register3.fromString(reg3) # set register3 so we can verify that its overwritten
+    assert theCpu.register3.toString()==reg3
+    
+    # Test that the command does what it's supposed to
+    theCpu.tick() # let the CPU execute the specified command in register1
+    assert theCpu.register3.toString()==reg2 # verify that target register is overwritten correctly
+    assert theCpu.register2.toString()==reg2 # verify that the source register is unchanged
+
 def test_executeAssemblyCommand_ADD_withOverlappingBits_register4Set():
     thisAssemblyLanguageInstance:assemb.assemblyLanguage = assemb.assemblyLanguage()
     commandString="ADD"
@@ -148,6 +169,45 @@ def test_executeAssemblyCommand_ADD_withJUMP_register0ResetAndNoJump():
 
 
 ############### assembler tests ###############
+def test_removeComments_noComment_linesUnchaged():
+    codeLine1:str="R2+R3"
+    codeLine2:str=r"{foo}:"
+    codeLines:list[str]=[]
+    codeLines.append(codeLine1)
+    codeLines.append(codeLine2)
+    thisAssembler:assemb.assembler = assemb.assembler()
+    strippedLines:list[str]=thisAssembler.removeComments(codeLines)
+    assert strippedLines[0]==codeLine1
+    assert strippedLines[1]==codeLine2
+    assert len(strippedLines)==2
+
+def test_removeComments_commentsOnLine_linesUnchaged():
+    codeLine1:str="R2+R3 # comment"
+    codeLine2:str=r"{foo}:"
+    codeLines:list[str]=[]
+    codeLines.append(codeLine1)
+    codeLines.append(codeLine2)
+    thisAssembler:assemb.assembler = assemb.assembler()
+    strippedLines:list[str]=thisAssembler.removeComments(codeLines)
+    assert strippedLines[0]=="R2+R3 "
+    assert strippedLines[1]==codeLine2
+    assert len(strippedLines)==2
+
+def test_removeComments_commentAsLine_linesUnchaged():
+    codeLine1:str="R2+R3"
+    codeLine2:str="# comment"
+    codeLine3:str=r"{foo}:"
+    codeLines:list[str]=[]
+    codeLines.append(codeLine1)
+    codeLines.append(codeLine2)
+    codeLines.append(codeLine3)
+    thisAssembler:assemb.assembler = assemb.assembler()
+    strippedLines:list[str]=thisAssembler.removeComments(codeLines)
+    assert strippedLines[0]==codeLine1
+    assert strippedLines[1]==""
+    assert strippedLines[2]==codeLine3
+    assert len(strippedLines)==3
+
 def test_parseExplicitLabel_notLabel_returnsFalse():
     codeLine="SUM"
     thisAssembler:assemb.assembler = assemb.assembler()

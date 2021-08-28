@@ -42,6 +42,26 @@ class assemblyLanguage:
             return None
         return binaryRepresentation
 
+    @staticmethod
+    def threeBitRegisterFromNumber(number:str) -> str:
+        if number=="0":
+            return "000"
+        if number=="1":
+            return "001"
+        if number=="2":
+            return "010"
+        if number=="3":
+            return "011"
+        if number=="4":
+            return "100"
+        if number=="5":
+            return "101"
+        if number=="6":
+            return "110"
+        if number=="7":
+            return "111"
+        raise Exception("the number string "+number+" doesn't correspond to a register.")
+
     def setupAL(self) -> list[assemblyLanguageCommand]:
         returnList:list[assemblyLanguageCommand] = []
 
@@ -75,6 +95,18 @@ class assemblyLanguage:
         copyCommand.convertToBinary = lambda stringList : "0000000"+stringList[1]+stringList[0]+"100"
         returnList.append(copyCommand)
 
+        copyRCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        copyRCommand.reMatch="COPY R([0-7]) R([0-7])"
+        copyRCommand.description="Copy the value of the register indicated by the 1st number into the register indicated by the 2nd number (except register1)."
+        copyRCommand.convertToBinary = lambda stringList : "0000000"+assemblyLanguage.threeBitRegisterFromNumber(stringList[1])+assemblyLanguage.threeBitRegisterFromNumber(stringList[0])+"100"
+        returnList.append(copyRCommand)
+
+        jumpRCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        jumpRCommand.reMatch="JUMP R([0-7])"
+        jumpRCommand.description="Copy the value of the register indicated by the number into register0, causing code flow to 'jump'."
+        jumpRCommand.convertToBinary = lambda stringList : "0000000"+"001"+assemblyLanguage.threeBitRegisterFromNumber(stringList[0])+"100"
+        returnList.append(jumpRCommand)
+
         aluCommand:assemblyLanguageCommand=assemblyLanguageCommand()
         aluCommand.reMatch="ALU ([01]{6})"
         aluCommand.description="Performs the ALU command indicated by the 6 bits given in the first argument.  The inputs to the command are register2 and register3.  The output is placed in register4."
@@ -87,6 +119,30 @@ class assemblyLanguage:
         aluWithJumpCommand.convertToBinary = lambda stringList : "00"+stringList[1]+stringList[0]+stringList[2]+"101"
         returnList.append(aluWithJumpCommand)
         
+        aluWithJumpRCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        aluWithJumpRCommand.reMatch="ALU ([01]{6}) IF ([01]{2}) JUMP R([0-7])"
+        aluWithJumpRCommand.description="Performs that ALU command indicated by the 6 bits given in the first argument.  The inputs to the command are register2 and register3.  The output is placed in register4.  If the output of the ALU operation is negative or zero (depending on the 2nd argument), then the value of the register indicated by the 3rd number will be copied to register0.  This will cause code flow to 'jump'."
+        aluWithJumpRCommand.convertToBinary = lambda stringList : "00"+stringList[1]+stringList[0]+assemblyLanguage.threeBitRegisterFromNumber(stringList[2])+"101"
+        returnList.append(aluWithJumpRCommand)
+
+        andRCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        andRCommand.reMatch="R2 AND R3"
+        andRCommand.description="Bitwise 'AND' operation.  Puts (register2 AND register3) into register4."
+        andRCommand.convertToBinary = lambda stringList : "0000000000000101"
+        returnList.append(andRCommand)
+        
+        andRJumpIfFalseCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        andRJumpIfFalseCommand.reMatch="R2 AND R3 IF FALSE JUMP R([0-7])"
+        andRJumpIfFalseCommand.description="Bitwise 'AND' operation.  Puts (register2 AND register3) into register4.  If the value placed in register4 is all zeros, the contents of the register indicated by the 1st argument is placed in register0; causing the code flow to 'jump'."
+        andRJumpIfFalseCommand.convertToBinary = lambda stringList : "0010000000"+assemblyLanguage.threeBitRegisterFromNumber(stringList[0])+"101"
+        returnList.append(andRJumpIfFalseCommand)
+
+        andRJumpIfTrueCommand:assemblyLanguageCommand=assemblyLanguageCommand()
+        andRJumpIfTrueCommand.reMatch="R2 AND R3 IF TRUE JUMP R([0-7])"
+        andRJumpIfTrueCommand.description="Bitwise 'AND' operation.  Puts (register2 AND register3) into register4.  If the any of the bits placed in register4 is TRUE, the contents of the register indicated by the 1st argument is placed in register0; causing the code flow to 'jump'."
+        andRJumpIfTrueCommand.convertToBinary = lambda stringList : "0001000000"+assemblyLanguage.threeBitRegisterFromNumber(stringList[0])+"101"
+        returnList.append(andRJumpIfTrueCommand)
+
         andCommand:assemblyLanguageCommand=assemblyLanguageCommand()
         andCommand.reMatch="AND"
         andCommand.description="Bitwise 'AND' operation.  Puts (register2 AND register3) into register4."
@@ -237,6 +293,17 @@ class assembler:
             raise RuntimeError("Assembler cannot re-use labels.")
         self.symbolTable[label]=value
         return True
+
+    def removeComments(self,linesOfCode:list[str])->list[str]:
+        """Removes comments from lines of code"""
+        outputLines:list[str]=[]
+        for line in linesOfCode:
+            hashPosition:int=line.find("#")
+            if hashPosition<0: # comment character not found
+                outputLines.append(line)
+            else:
+                outputLines.append(line[0:hashPosition])
+        return outputLines
 
     def cleanWhiteSpace(self,linesOfCode:list[str])->list[str]:
         """Cleans up the whitespace in the lines of code, and removes blank lines."""
